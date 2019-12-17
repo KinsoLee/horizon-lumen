@@ -1,18 +1,13 @@
 <?php
-
 namespace Laravel\Horizon;
-
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Horizon\Connectors\RedisConnector;
-use Laravel\Horizon\Console\WorkCommand;
-
 class HorizonServiceProvider extends ServiceProvider
 {
     use EventMap, ServiceBindings;
-
     /**
      * Bootstrap any application services.
      *
@@ -22,11 +17,9 @@ class HorizonServiceProvider extends ServiceProvider
     {
         $this->registerEvents();
         $this->registerRoutes();
-        $this->registerRedisAlias();
         $this->registerResources();
         $this->defineAssetPublishing();
     }
-
     /**
      * Register the Horizon job events.
      *
@@ -35,14 +28,12 @@ class HorizonServiceProvider extends ServiceProvider
     protected function registerEvents()
     {
         $events = $this->app->make(Dispatcher::class);
-
         foreach ($this->events as $event => $listeners) {
             foreach ($listeners as $listener) {
                 $events->listen($event, $listener);
             }
         }
     }
-
     /**
      * Register the Horizon routes.
      *
@@ -56,10 +47,9 @@ class HorizonServiceProvider extends ServiceProvider
             'namespace' => 'Laravel\Horizon\Http\Controllers',
             'middleware' => config('horizon.middleware', 'web'),
         ], function () {
-            require __DIR__ . '/../routes/web.php';
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         });
     }
-
     /**
      * Register the Horizon resources.
      *
@@ -67,21 +57,8 @@ class HorizonServiceProvider extends ServiceProvider
      */
     protected function registerResources()
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'horizon');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'horizon');
     }
-
-    /**
-     * Register redis factory.
-     *
-     * @return void
-     */
-    protected function registerRedisAlias()
-    {
-        $this->app->alias('redis', \Illuminate\Contracts\Redis\Factory::class);
-
-        $this->app->make('redis');
-    }
-
     /**
      * Define the asset publishing configuration.
      *
@@ -90,10 +67,9 @@ class HorizonServiceProvider extends ServiceProvider
     public function defineAssetPublishing()
     {
         $this->publishes([
-            HORIZON_PATH . '/public' => base_path('public/vendor/horizon'),
+            HORIZON_PATH.'/public' => public_path('vendor/horizon'),
         ], 'horizon-assets');
     }
-
     /**
      * Register the custom queue connectors for Horizon.
      *
@@ -107,7 +83,6 @@ class HorizonServiceProvider extends ServiceProvider
             });
         });
     }
-
     /**
      * Register any application services.
      *
@@ -115,22 +90,18 @@ class HorizonServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        if (!defined('HORIZON_PATH')) {
-            define('HORIZON_PATH', realpath(__DIR__ . '/../'));
+        if (! defined('HORIZON_PATH')) {
+            define('HORIZON_PATH', realpath(__DIR__.'/../'));
         }
-
         $this->app->bind(Console\WorkCommand::class, function ($app) {
             return new Console\WorkCommand($app['queue.worker'], $app['cache.store']);
         });
-
         $this->configure();
         $this->offerPublishing();
         $this->registerServices();
-        $this->registerQueueWorkCommand();
         $this->registerCommands();
         $this->registerQueueConnectors();
     }
-
     /**
      * Setup the configuration for Horizon.
      *
@@ -138,14 +109,11 @@ class HorizonServiceProvider extends ServiceProvider
      */
     protected function configure()
     {
-        $this->app->configure('horizon');
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/horizon.php', 'horizon'
+            __DIR__.'/../config/horizon.php', 'horizon'
         );
-
         Horizon::use(config('horizon.use'));
     }
-
     /**
      * Setup the resource publishing groups for Horizon.
      *
@@ -157,25 +125,11 @@ class HorizonServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../stubs/HorizonServiceProvider.stub' => app_path('Providers/HorizonServiceProvider.php'),
             ], 'horizon-provider');
-
             $this->publishes([
                 __DIR__.'/../config/horizon.php' => config_path('horizon.php'),
             ], 'horizon-config');
         }
     }
-
-    /**
-     * Register the command instance.
-     *
-     * @return void
-     */
-    protected function registerQueueWorkCommand()
-    {
-        $this->app->singleton(WorkCommand::class, function ($app) {
-            return new WorkCommand($app['queue.worker'], $this->app['redis']);
-        });
-    }
-
     /**
      * Register Horizon's services in the container.
      *
@@ -189,7 +143,6 @@ class HorizonServiceProvider extends ServiceProvider
                 : $this->app->singleton($key, $value);
         }
     }
-
     /**
      * Register the Horizon Artisan commands.
      *
@@ -199,13 +152,13 @@ class HorizonServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\ContinueCommand::class,
-                Console\HorizonCommand::class,
                 Console\InstallCommand::class,
+                Console\AssetsCommand::class,
+                Console\HorizonCommand::class,
                 Console\ListCommand::class,
-                Console\PauseCommand::class,
-                Console\PublishCommand::class,
                 Console\PurgeCommand::class,
+                Console\PauseCommand::class,
+                Console\ContinueCommand::class,
                 Console\StatusCommand::class,
                 Console\SupervisorCommand::class,
                 Console\SupervisorsCommand::class,
@@ -214,7 +167,6 @@ class HorizonServiceProvider extends ServiceProvider
                 Console\WorkCommand::class,
             ]);
         }
-
         $this->commands([Console\SnapshotCommand::class]);
     }
 }
