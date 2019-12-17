@@ -63,11 +63,11 @@ class FailedJobsController extends Controller
      * Paginate the failed jobs for the request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return \Illuminate\Support\Collection
      */
     protected function paginate(Request $request)
     {
-        return $this->jobs->getFailed($request->query('starting_at', -1))->map(function ($job) {
+        return $this->jobs->getFailed($request->query('starting_at') ?: -1)->map(function ($job) {
             return $this->decode($job);
         });
     }
@@ -77,12 +77,12 @@ class FailedJobsController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  string  $tag
-     * @return array
+     * @return \Illuminate\Support\Collection
      */
     protected function paginateByTag(Request $request, $tag)
     {
         $jobIds = $this->tags->paginate(
-            'failed:'.$tag, $request->query('starting_at', -1) + 1, 50
+            'failed:'.$tag, ($request->query('starting_at') ?: -1) + 1, 50
         );
 
         $startingAt = $request->query('starting_at', 0);

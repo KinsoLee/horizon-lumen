@@ -3,10 +3,10 @@
 namespace Laravel\Horizon\Repositories;
 
 use Cake\Chronos\Chronos;
-use Illuminate\Support\Arr;
-use Laravel\Horizon\Supervisor;
-use Laravel\Horizon\Contracts\SupervisorRepository;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Support\Arr;
+use Laravel\Horizon\Contracts\SupervisorRepository;
+use Laravel\Horizon\Supervisor;
 
 class RedisSupervisorRepository implements SupervisorRepository
 {
@@ -117,7 +117,7 @@ class RedisSupervisorRepository implements SupervisorRepository
             $pipe->hmset(
                 'supervisor:'.$supervisor->name, [
                     'name' => $supervisor->name,
-                    'master' => explode(':', $supervisor->name)[0],
+                    'master' => implode(':', explode(':', $supervisor->name, -1)),
                     'pid' => $supervisor->pid(),
                     'status' => $supervisor->working ? 'running' : 'paused',
                     'processes' => $processes,

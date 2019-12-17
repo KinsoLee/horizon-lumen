@@ -2,11 +2,11 @@
 
 namespace Laravel\Horizon\Tests\Controller;
 
-use Laravel\Horizon\Supervisor;
-use Laravel\Horizon\MasterSupervisor;
-use Laravel\Horizon\SupervisorOptions;
-use Laravel\Horizon\Contracts\SupervisorRepository;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
+use Laravel\Horizon\Contracts\SupervisorRepository;
+use Laravel\Horizon\MasterSupervisor;
+use Laravel\Horizon\Supervisor;
+use Laravel\Horizon\SupervisorOptions;
 
 class MasterSupervisorControllerTest extends AbstractControllerTest
 {
@@ -57,6 +57,40 @@ class MasterSupervisorControllerTest extends AbstractControllerTest
                 ],
             ],
             'risa-2' => [
+                'supervisors' => [],
+            ],
+        ]);
+    }
+
+    public function test_master_supervisor_with_custom_name_listing_with_supervisors()
+    {
+        $master = new MasterSupervisor;
+        $master->name = 'risa:production';
+        resolve(MasterSupervisorRepository::class)->update($master);
+
+        $master2 = new MasterSupervisor;
+        $master2->name = 'risa:production-2';
+        resolve(MasterSupervisorRepository::class)->update($master2);
+
+        $supervisor = new Supervisor(new SupervisorOptions('risa:production:name', 'redis'));
+        resolve(SupervisorRepository::class)->update($supervisor);
+
+        $response = $this->actingAs(new Fakes\User)->get('/horizon/api/masters');
+
+        $response->assertJson([
+            'risa:production' => [
+                'name' => 'risa:production',
+                'status' => 'running',
+                'supervisors' => [
+                    [
+                        'name' => 'risa:production:name',
+                        'master' => 'risa:production',
+                        'status' => 'running',
+                        'processes' => ['redis:default' => 0],
+                    ],
+                ],
+            ],
+            'risa:production-2' => [
                 'supervisors' => [],
             ],
         ]);

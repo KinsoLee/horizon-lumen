@@ -2,9 +2,9 @@
 
 namespace Laravel\Horizon;
 
+use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Illuminate\Support\Collection;
 use Laravel\Horizon\Contracts\MetricsRepository;
-use Illuminate\Contracts\Queue\Factory as QueueFactory;
 
 class AutoScaler
 {
@@ -79,7 +79,10 @@ class AutoScaler
         return $pools->mapWithKeys(function ($pool, $queue) use ($supervisor) {
             $size = $this->queue->connection($supervisor->options->connection)->readyNow($queue);
 
-            return [$queue => ($size * $this->metrics->runtimeForQueue($queue))];
+            return [$queue => [
+                'size' => $size,
+                'time' =>  ($size * $this->metrics->runtimeForQueue($queue)),
+            ]];
         });
     }
 
@@ -87,17 +90,27 @@ class AutoScaler
      * Get the number of workers needed per queue for proper balance.
      *
      * @param  \Laravel\Horizon\Supervisor  $supervisor
-     * @param  \Illuminate\Support\Collection  $timeToClear
+     * @param  \Illuminate\Support\Collection  $queues
      * @return \Illuminate\Support\Collection
      */
-    protected function numberOfWorkersPerQueue(Supervisor $supervisor, Collection $timeToClear)
+    protected function numberOfWorkersPerQueue(Supervisor $supervisor, Collection $queues)
     {
-        $timeToClearAll = $timeToClear->sum();
+        $timeToClearAll = $queues->sum('time');
 
-        return $timeToClear->mapWithKeys(function ($timeToClear, $queue) use ($supervisor, $timeToClearAll) {
-            return $timeToClearAll > 0 && $supervisor->options->autoScaling()
-                    ? [$queue => (($timeToClear / $timeToClearAll) * $supervisor->options->maxProcesses)]
-                    : [$queue => $supervisor->options->maxProcesses / count($supervisor->processPools)];
+        return $queues->mapWithKeys(function ($timeToClear, $queue) use ($supervisor, $timeToClearAll) {
+            if ($timeToClearAll > 0 &&
+                $supervisor->options->autoScaling()) {
+                return [$queue => (($timeToClear['time'] / $timeToClearAll) * $supervisor->options->maxProcesses)];
+            } elseif ($timeToClearAll == 0 &&
+                      $supervisor->options->autoScaling()) {
+                return [
+                    $queue => $timeToClear['size']
+                                ? $supervisor->options->maxProcesses
+                                : $supervisor->options->minProcesses,
+                ];
+            }
+
+            return [$queue => $supervisor->options->maxProcesses / count($supervisor->processPools)];
         })->sort();
     }
 
@@ -115,10 +128,10 @@ class AutoScaler
 
         $poolProcesses = $pool->totalProcessCount();
 
-        if (round($workers) > $poolProcesses &&
+        if (ceil($workers) > $poolProcesses &&
             $this->wouldNotExceedMaxProcesses($supervisor)) {
             $pool->scale($poolProcesses + 1);
-        } elseif (round($workers) < $poolProcesses &&
+        } elseif (ceil($workers) < $poolProcesses &&
                   $poolProcesses > $supervisor->options->minProcesses) {
             $pool->scale($poolProcesses - 1);
         }

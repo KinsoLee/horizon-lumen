@@ -2,19 +2,20 @@
 
 namespace Laravel\Horizon\Tests\Feature;
 
-use Mockery;
-use Laravel\Horizon\PhpBinary;
+use Exception;
 use Illuminate\Support\Facades\Redis;
-use Laravel\Horizon\MasterSupervisor;
-use Laravel\Horizon\SupervisorOptions;
-use Laravel\Horizon\SupervisorProcess;
-use Laravel\Horizon\WorkerCommandString;
-use Laravel\Horizon\Tests\IntegrationTest;
 use Laravel\Horizon\Contracts\HorizonCommandQueue;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
+use Laravel\Horizon\MasterSupervisor;
 use Laravel\Horizon\MasterSupervisorCommands\AddSupervisor;
+use Laravel\Horizon\PhpBinary;
+use Laravel\Horizon\SupervisorOptions;
+use Laravel\Horizon\SupervisorProcess;
 use Laravel\Horizon\Tests\Feature\Fixtures\EternalSupervisor;
 use Laravel\Horizon\Tests\Feature\Fixtures\SupervisorProcessWithFakeRestart;
+use Laravel\Horizon\Tests\IntegrationTest;
+use Laravel\Horizon\WorkerCommandString;
+use Mockery;
 
 class MasterSupervisorTest extends IntegrationTest
 {
@@ -37,7 +38,9 @@ class MasterSupervisorTest extends IntegrationTest
     {
         $master = new MasterSupervisor;
         $master->working = true;
-        $master->supervisors[] = $supervisorProcess = new SupervisorProcess($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = $supervisorProcess = new SupervisorProcess(
+            $this->supervisorOptions(), $process = Mockery::mock()
+        );
 
         $process->shouldReceive('isStarted')->andReturn(true);
         $process->shouldReceive('isRunning')->andReturn(false);
@@ -53,7 +56,9 @@ class MasterSupervisorTest extends IntegrationTest
     {
         $master = new MasterSupervisor;
         $master->working = true;
-        $master->supervisors[] = $supervisorProcess = new SupervisorProcess($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = $supervisorProcess = new SupervisorProcess(
+            $this->supervisorOptions(), $process = Mockery::mock()
+        );
 
         $process->shouldReceive('isStarted')->andReturn(true);
         $process->shouldReceive('isRunning')->andReturn(false);
@@ -69,7 +74,9 @@ class MasterSupervisorTest extends IntegrationTest
     {
         $master = new MasterSupervisor;
         $master->working = true;
-        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart(
+            $this->supervisorOptions(), $process = Mockery::mock()
+        );
 
         $process->shouldReceive('isStarted')->andReturn(true);
         $process->shouldReceive('isRunning')->andReturn(false);
@@ -94,7 +101,9 @@ class MasterSupervisorTest extends IntegrationTest
     {
         $master = new MasterSupervisor;
         $master->working = true;
-        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart(
+            $this->supervisorOptions(), $process = Mockery::mock()
+        );
 
         $process->shouldReceive('isStarted')->andReturn(false);
 
@@ -108,7 +117,9 @@ class MasterSupervisorTest extends IntegrationTest
     public function test_master_process_starts_unstarted_processes_when_unpaused()
     {
         $master = new MasterSupervisor;
-        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = $supervisorProcess = new SupervisorProcessWithFakeRestart(
+            $this->supervisorOptions(), $process = Mockery::mock()
+        );
 
         $process->shouldReceive('isStarted')->andReturn(false);
         $process->shouldReceive('isRunning')->andReturn(false);
@@ -146,7 +157,7 @@ class MasterSupervisorTest extends IntegrationTest
     {
         $master = new MasterSupervisor;
         $master->working = true;
-        $master->supervisors[] = new SupervisorProcess($this->options(), $process = Mockery::mock());
+        $master->supervisors[] = new SupervisorProcess($this->supervisorOptions(), $process = Mockery::mock());
         $process->shouldReceive('isStarted')->andReturn(true);
         $process->shouldReceive('isRunning')->andReturn(true);
         $process->shouldReceive('signal');
@@ -166,11 +177,10 @@ class MasterSupervisorTest extends IntegrationTest
         $this->assertSame('paused', $masterRecord->status);
     }
 
-    /**
-     * @expectedException \Exception
-     */
     public function test_master_process_should_not_allow_duplicate_master_process_on_same_machine()
     {
+        $this->expectException(Exception::class);
+
         $master = new MasterSupervisor;
         $master->working = true;
         $master2 = new MasterSupervisor;
@@ -220,7 +230,7 @@ class MasterSupervisorTest extends IntegrationTest
         $this->assertTrue($master->exited);
     }
 
-    protected function options()
+    protected function supervisorOptions()
     {
         return tap(new SupervisorOptions(MasterSupervisor::name().':name', 'redis'), function ($options) {
             $phpBinary = PhpBinary::path();

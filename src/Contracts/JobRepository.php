@@ -2,8 +2,8 @@
 
 namespace Laravel\Horizon\Contracts;
 
-use Laravel\Horizon\JobPayload;
 use Illuminate\Support\Collection;
+use Laravel\Horizon\JobPayload;
 
 interface JobRepository
 {
@@ -154,6 +154,13 @@ interface JobRepository
      * @return void
      */
     public function trimFailedJobs();
+
+    /**
+     * Trim the monitored job list.
+     *
+     * @return void
+     */
+    public function trimMonitoredJobs();
 
     /**
      * Find a failed job by ID.

@@ -2,10 +2,10 @@
 
 namespace Laravel\Horizon;
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Events\Dispatcher;
 use Laravel\Horizon\Connectors\RedisConnector;
 use Laravel\Horizon\Console\WorkCommand;
 
@@ -51,9 +51,10 @@ class HorizonServiceProvider extends ServiceProvider
     protected function registerRoutes()
     {
         Route::group([
-            'prefix'     => config('horizon.uri', 'horizon'),
-            'namespace'  => 'Laravel\Horizon\Http\Controllers',
-            'middleware' => config('horizon.middleware'),
+            'domain' => config('horizon.domain', null),
+            'prefix' => config('horizon.path'),
+            'namespace' => 'Laravel\Horizon\Http\Controllers',
+            'middleware' => config('horizon.middleware', 'web'),
         ], function () {
             require __DIR__ . '/../routes/web.php';
         });
@@ -118,6 +119,10 @@ class HorizonServiceProvider extends ServiceProvider
             define('HORIZON_PATH', realpath(__DIR__ . '/../'));
         }
 
+        $this->app->bind(Console\WorkCommand::class, function ($app) {
+            return new Console\WorkCommand($app['queue.worker'], $app['cache.store']);
+        });
+
         $this->configure();
         $this->offerPublishing();
         $this->registerServices();
@@ -150,7 +155,11 @@ class HorizonServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/horizon.php' => app()->basePath('config/horizon.php'),
+                __DIR__.'/../stubs/HorizonServiceProvider.stub' => app_path('Providers/HorizonServiceProvider.php'),
+            ], 'horizon-provider');
+
+            $this->publishes([
+                __DIR__.'/../config/horizon.php' => config_path('horizon.php'),
             ], 'horizon-config');
         }
     }
@@ -190,12 +199,14 @@ class HorizonServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\AssetsCommand::class,
-                Console\HorizonCommand::class,
-                Console\ListCommand::class,
-                Console\PurgeCommand::class,
-                Console\PauseCommand::class,
                 Console\ContinueCommand::class,
+                Console\HorizonCommand::class,
+                Console\InstallCommand::class,
+                Console\ListCommand::class,
+                Console\PauseCommand::class,
+                Console\PublishCommand::class,
+                Console\PurgeCommand::class,
+                Console\StatusCommand::class,
                 Console\SupervisorCommand::class,
                 Console\SupervisorsCommand::class,
                 Console\TerminateCommand::class,

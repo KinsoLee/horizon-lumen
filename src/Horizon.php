@@ -43,6 +43,13 @@ class Horizon
     public static $email;
 
     /**
+     * Indicates if Horizon should use the dark theme.
+     *
+     * @var bool
+     */
+    public static $useDarkTheme = false;
+
+    /**
      * The database configuration methods.
      *
      * @var array
@@ -87,13 +94,39 @@ class Horizon
      */
     public static function use($connection)
     {
-        if (is_null($config = config("database.redis.{$connection}"))) {
+        if (! is_null($config = config("database.redis.clusters.{$connection}.0"))) {
+            config(["database.redis.{$connection}" => $config]);
+        } elseif (is_null($config) && is_null($config = config("database.redis.{$connection}"))) {
             throw new Exception("Redis connection [{$connection}] has not been configured.");
         }
 
         config(['database.redis.horizon' => array_merge($config, [
             'options' => ['prefix' => config('horizon.prefix') ?: 'horizon:'],
         ])]);
+    }
+
+    /**
+     * Specifies that Horizon should use the dark theme.
+     *
+     * @return static
+     */
+    public static function night()
+    {
+        static::$useDarkTheme = true;
+
+        return new static;
+    }
+
+    /**
+     * Get the default JavaScript variables for Horizon.
+     *
+     * @return array
+     */
+    public static function scriptVariables()
+    {
+        return [
+            'path' => config('horizon.path'),
+        ];
     }
 
     /**

@@ -2,12 +2,12 @@
 
 namespace Laravel\Horizon\Tests\Feature;
 
-use Laravel\Horizon\PhpBinary;
+use Laravel\Horizon\Contracts\HorizonCommandQueue;
 use Laravel\Horizon\MasterSupervisor;
+use Laravel\Horizon\MasterSupervisorCommands\AddSupervisor;
+use Laravel\Horizon\PhpBinary;
 use Laravel\Horizon\SupervisorOptions;
 use Laravel\Horizon\Tests\IntegrationTest;
-use Laravel\Horizon\Contracts\HorizonCommandQueue;
-use Laravel\Horizon\MasterSupervisorCommands\AddSupervisor;
 
 class AddSupervisorTest extends IntegrationTest
 {
@@ -28,7 +28,7 @@ class AddSupervisorTest extends IntegrationTest
         $this->assertCount(1, $master->supervisors);
 
         $this->assertEquals(
-            'exec '.$phpBinary.' artisan horizon:supervisor my-supervisor redis --delay=0 --memory=128 --queue="default" --sleep=3 --timeout=60 --tries=0 --balance=off --max-processes=1 --min-processes=1',
+            'exec '.$phpBinary.' artisan horizon:supervisor my-supervisor redis --delay=0 --memory=128 --queue="default" --sleep=3 --timeout=60 --tries=0 --balance=off --max-processes=1 --min-processes=1 --nice=0',
             $master->supervisors->first()->process->getCommandLine()
         );
     }
