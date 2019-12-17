@@ -163,7 +163,7 @@ class HorizonServiceProvider extends ServiceProvider
     protected function registerQueueWorkCommand()
     {
         $this->app->singleton(WorkCommand::class, function ($app) {
-            return new WorkCommand($app['queue.worker']);
+            return new WorkCommand($app['queue.worker'], $this->app['redis']);
         });
     }
 
