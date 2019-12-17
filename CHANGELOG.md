@@ -1,10 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/horizon/compare/v3.4.3...master)
+## [Unreleased](https://github.com/laravel/horizon/compare/v3.4.4...3.0)
 
 ### Changed
 - Dropped support for Laravel  5.8 ([8216c34](https://github.com/laravel/horizon/commit/8216c34736564998380f97252c117716020aee0a))
 - Bumped minimum Symfony dependencies to 4.3 ([2eb9d6d](https://github.com/laravel/horizon/commit/2eb9d6d77acd5e8b42da0a8146c9e8d8105fbd8a))
+
+## [v3.4.4 (2019-12-10)](https://github.com/laravel/horizon/compare/v3.4.3...v3.4.4)
+
+### Fixed
+- Scale to the maxProcesses if timeToClearAll is zero ([#718](https://github.com/laravel/horizon/pull/718))
+- Handle js `phpunserialize` not working with closures ([9c3a75a](https://github.com/laravel/horizon/commit/9c3a75a0f3cc1a2d1805f48c8aab49469cb4ab33))
 
 
 ## [v3.4.3 (2019-11-19)](https://github.com/laravel/horizon/compare/v3.4.2...v3.4.3)
