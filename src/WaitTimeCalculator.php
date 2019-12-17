@@ -2,9 +2,10 @@
 
 namespace Laravel\Horizon;
 
+use Illuminate\Contracts\Queue\Factory as QueueFactory;
+use Illuminate\Support\Str;
 use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Contracts\SupervisorRepository;
-use Illuminate\Contracts\Queue\Factory as QueueFactory;
 
 class WaitTimeCalculator
 {
@@ -74,7 +75,7 @@ class WaitTimeCalculator
 
             [$connection, $queueName] = explode(':', $queue, 2);
 
-            $timeToClear = ! str_contains($queueName, ',')
+            $timeToClear = ! Str::contains($queueName, ',')
                 ? $this->timeToClearFor($connection, $queueName)
                 : collect(explode(',', $queueName))->sum(function ($queueName) use ($connection) {
                     return $this->timeToClearFor($connection, $queueName);

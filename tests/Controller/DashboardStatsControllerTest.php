@@ -2,12 +2,12 @@
 
 namespace Laravel\Horizon\Tests\Controller;
 
-use Mockery;
-use Laravel\Horizon\WaitTimeCalculator;
 use Laravel\Horizon\Contracts\JobRepository;
+use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Contracts\SupervisorRepository;
-use Laravel\Horizon\Contracts\MasterSupervisorRepository;
+use Laravel\Horizon\WaitTimeCalculator;
+use Mockery;
 
 class DashboardStatsControllerTest extends AbstractControllerTest
 {
@@ -58,10 +58,14 @@ class DashboardStatsControllerTest extends AbstractControllerTest
             'wait' => ['first' => 20],
             'processes' => 30,
             'status' => 'inactive',
-            'recentlyFailed' => 1,
+            'failedJobs' => 1,
             'recentJobs' => 1,
             'queueWithMaxRuntime' => 'default',
             'queueWithMaxThroughput' => 'default',
+            'periods' => [
+                'failedJobs' => 10080,
+                'recentJobs' => 60,
+            ],
         ]);
     }
 

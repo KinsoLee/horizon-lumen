@@ -3,11 +3,11 @@
 namespace Laravel\Horizon;
 
 use ArrayAccess;
-use Illuminate\Support\Arr;
-use Illuminate\Mail\SendQueuedMailable;
-use Illuminate\Events\CallQueuedListener;
 use Illuminate\Broadcasting\BroadcastEvent;
+use Illuminate\Events\CallQueuedListener;
+use Illuminate\Mail\SendQueuedMailable;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Arr;
 
 class JobPayload implements ArrayAccess
 {
@@ -89,7 +89,7 @@ class JobPayload implements ArrayAccess
         return $this->set([
             'type' => $this->determineType($job),
             'tags' => $this->determineTags($job),
-            'pushedAt' => microtime(true),
+            'pushedAt' => str_replace(',', '.', microtime(true)),
         ]);
     }
 

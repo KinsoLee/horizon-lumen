@@ -9,23 +9,27 @@
         "prod": "npm run production",
         "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
     },
-    "dependencies": {
-        "axios": "^0.15.3",
-        "bootstrap": "^4.0.0-beta.2",
+    "devDependencies": {
+        "axios": "^0.19.0",
+        "bootstrap": "^4.3.1",
         "chart.js": "^2.5.0",
-        "jquery": "^3.1.0",
-        "less": "^3.0.0-alpha.3",
-        "less-loader": "^4.0.5",
-        "lodash": "^4.16.2",
+        "cross-env": "^5.1",
+        "highlight.js": "^9.12.0",
+        "jquery": "^3.4.1",
+        "laravel-mix": "^4.0.15",
+        "lodash": "^4.17.13",
+        "md5": "^2.2.1",
         "moment": "^2.10.6",
+        "moment-timezone": "^0.5.21",
         "phpunserialize": "1.*",
         "popper.js": "^1.12",
-        "vue": "^2.2.0",
-        "vue-router": "^2.2.0"
-    },
-    "devDependencies": {
-        "cross-env": "^5.0.1",
-        "es6-promise": "^4.0.5",
-        "laravel-mix": "^1.4.2"
+        "resolve-url-loader": "^2.3.1",
+        "sass": "^1.15.2",
+        "sass-loader": "^7.1.0",
+        "sql-formatter": "^2.3.1",
+        "vue": "^2.5.7",
+        "vue-json-pretty": "^1.4.1",
+        "vue-router": "^3.0.1",
+        "vue-template-compiler": "^2.5.21"
     }
 }

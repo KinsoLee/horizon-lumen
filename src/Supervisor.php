@@ -2,21 +2,23 @@
 
 namespace Laravel\Horizon;
 
+use Cake\Chronos\Chronos;
 use Closure;
 use Exception;
-use Throwable;
-use Cake\Chronos\Chronos;
-use Laravel\Horizon\Contracts\Pausable;
-use Laravel\Horizon\Contracts\Terminable;
-use Laravel\Horizon\Contracts\Restartable;
-use Laravel\Horizon\Events\SupervisorLooped;
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Laravel\Horizon\Contracts\HorizonCommandQueue;
+use Laravel\Horizon\Contracts\Pausable;
+use Laravel\Horizon\Contracts\Restartable;
 use Laravel\Horizon\Contracts\SupervisorRepository;
-use Symfony\Component\Debug\Exception\FatalThrowableError;
+use Laravel\Horizon\Contracts\Terminable;
+use Laravel\Horizon\Events\SupervisorLooped;
+use Throwable;
 
 class Supervisor implements Pausable, Restartable, Terminable
 {
+    use ListensForSignals;
+
     /**
      * The name of this supervisor instance.
      *
@@ -219,17 +221,30 @@ class Supervisor implements Pausable, Restartable, Terminable
         // pools down to zero workers to gracefully terminate them all out here.
         app(SupervisorRepository::class)->forget($this->name);
 
-        $this->processPools->each(function($pool) {
-            $pool->processes()->each(function($process) {
+        $this->processPools->each(function ($pool) {
+            $pool->processes()->each(function ($process) {
                 $process->terminate();
             });
         });
 
-        while ($this->processPools->map->runningProcesses()->collapse()->count()) {
-            sleep(1);
+        if ($this->shouldWait()) {
+            while ($this->processPools->map->runningProcesses()->collapse()->count()) {
+                sleep(1);
+            }
         }
 
         $this->exit($status);
+    }
+
+    /**
+     * Check if the supervisor should wait for all its workers to terminate.
+     *
+     * @return bool
+     */
+    protected function shouldWait()
+    {
+        return ! config('horizon.fast_termination') ||
+               app(CacheFactory::class)->get('horizon:terminate:wait');
     }
 
     /**
@@ -273,6 +288,8 @@ class Supervisor implements Pausable, Restartable, Terminable
     public function loop()
     {
         try {
+            $this->processPendingSignals();
+
             $this->processPendingCommands();
 
             // If the supervisor is working, we will perform any needed scaling operations and
@@ -290,10 +307,8 @@ class Supervisor implements Pausable, Restartable, Terminable
             $this->persist();
 
             event(new SupervisorLooped($this));
-        } catch (Exception $e) {
-            app(ExceptionHandler::class)->report($e);
         } catch (Throwable $e) {
-            app(ExceptionHandler::class)->report(new FatalThrowableError($e));
+            app(ExceptionHandler::class)->report($e);
         }
     }
 
@@ -396,32 +411,6 @@ class Supervisor implements Pausable, Restartable, Terminable
     public function totalSystemProcessCount()
     {
         return app(SystemProcessCounter::class)->get($this->name);
-    }
-
-    /**
-     * Listen for incoming process signals.
-     *
-     * @return void
-     */
-    protected function listenForSignals()
-    {
-        pcntl_async_signals(true);
-
-        pcntl_signal(SIGTERM, function () {
-            $this->terminate();
-        });
-
-        pcntl_signal(SIGUSR1, function () {
-            $this->restart();
-        });
-
-        pcntl_signal(SIGUSR2, function () {
-            $this->pause();
-        });
-
-        pcntl_signal(SIGCONT, function () {
-            $this->continue();
-        });
     }
 
     /**

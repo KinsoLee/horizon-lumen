@@ -23,8 +23,8 @@ Route::group(['prefix' => 'api'],function () {
     Route::get('/metrics/jobs/{id}', 'JobMetricsController@show',['as' => 'horizon.jobs-metrics.show']);
 
     // Queue Metric Routes...
-    Route::get('/metrics/queues', 'QueueMetricsController@index',['as' => 'horizon.queues-metrics.index']);
-    Route::get('/metrics/queues/{id}', 'QueueMetricsController@show',['as' => 'horizon.queues-metrics.show']);
+    Route::get('/metrics/queues', 'QueueMetricsController@index')->name('horizon.queues-metrics.index');
+    Route::get('/metrics/queues/{id}', 'QueueMetricsController@show')->name('horizon.queues-metrics.show');
 
     // Job Routes...
     Route::get('/jobs/recent', 'RecentJobsController@index',['as' => 'horizon.recent-jobs.index']);

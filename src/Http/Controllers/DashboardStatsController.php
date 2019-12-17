@@ -2,11 +2,11 @@
 
 namespace Laravel\Horizon\Http\Controllers;
 
-use Laravel\Horizon\WaitTimeCalculator;
 use Laravel\Horizon\Contracts\JobRepository;
+use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Contracts\SupervisorRepository;
-use Laravel\Horizon\Contracts\MasterSupervisorRepository;
+use Laravel\Horizon\WaitTimeCalculator;
 
 class DashboardStatsController extends Controller
 {
@@ -22,10 +22,14 @@ class DashboardStatsController extends Controller
             'processes' => $this->totalProcessCount(),
             'queueWithMaxRuntime' => app(MetricsRepository::class)->queueWithMaximumRuntime(),
             'queueWithMaxThroughput' => app(MetricsRepository::class)->queueWithMaximumThroughput(),
-            'recentlyFailed' => app(JobRepository::class)->countRecentlyFailed(),
+            'failedJobs' => app(JobRepository::class)->countRecentlyFailed(),
             'recentJobs' => app(JobRepository::class)->countRecent(),
             'status' => $this->currentStatus(),
             'wait' => collect(app(WaitTimeCalculator::class)->calculate())->take(1),
+            'periods' => [
+                'failedJobs' => config('horizon.trim.recent_failed', config('horizon.trim.recent')),
+                'recentJobs' => config('horizon.trim.recent'),
+            ],
         ];
     }
 

@@ -2,14 +2,14 @@
 
 namespace Laravel\Horizon\Tests\Feature;
 
-use Mockery;
+use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Laravel\Horizon\AutoScaler;
+use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Supervisor;
 use Laravel\Horizon\SupervisorOptions;
 use Laravel\Horizon\SystemProcessCounter;
 use Laravel\Horizon\Tests\IntegrationTest;
-use Laravel\Horizon\Contracts\MetricsRepository;
-use Illuminate\Contracts\Queue\Factory as QueueFactory;
+use Mockery;
 
 class AutoScalerTest extends IntegrationTest
 {
@@ -51,18 +51,66 @@ class AutoScalerTest extends IntegrationTest
 
         $scaler->scale($supervisor);
 
-        $this->assertEquals(5, $supervisor->processPools['first']->totalProcessCount());
-        $this->assertEquals(5, $supervisor->processPools['second']->totalProcessCount());
+        $this->assertEquals(4, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(4, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(3, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(3, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(2, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(2, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(1, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(1, $supervisor->processPools['second']->totalProcessCount());
     }
 
-    public function test_balancing_a_single_queue_assigns_it_the_max_workers()
+    public function test_balancer_assigns_more_processes_on_busy_queue()
     {
-        [$scaler, $supervisor] = $this->with_scaling_scenario(5, [
-            'first' => ['current' => 4, 'size' => 0, 'runtime' => 0],
+        [$scaler, $supervisor] = $this->with_scaling_scenario(10, [
+            'first' => ['current' => 1, 'size' => 50, 'runtime' => 50],
+            'second' => ['current' => 1, 'size' => 0, 'runtime' => 0],
         ]);
 
         $scaler->scale($supervisor);
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(3, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(1, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+        $scaler->scale($supervisor);
+
         $this->assertEquals(5, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(1, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(7, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(1, $supervisor->processPools['second']->totalProcessCount());
+
+        $scaler->scale($supervisor);
+        $scaler->scale($supervisor);
+        $scaler->scale($supervisor);
+
+        $this->assertEquals(9, $supervisor->processPools['first']->totalProcessCount());
+        $this->assertEquals(1, $supervisor->processPools['second']->totalProcessCount());
+    }
+
+    public function test_balancing_a_single_queue_assigns_it_the_min_workers_with_empty_queue()
+    {
+        [$scaler, $supervisor] = $this->with_scaling_scenario(5, [
+            'first' => ['current' => 2, 'size' => 0, 'runtime' => 0],
+        ]);
+
+        $scaler->scale($supervisor);
+        $this->assertEquals(1, $supervisor->processPools['first']->totalProcessCount());
     }
 
     public function test_scaler_will_not_scale_past_max_process_threshold_under_high_load()

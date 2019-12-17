@@ -3,8 +3,8 @@
 namespace Laravel\Horizon\Tests\Feature;
 
 use Laravel\Horizon\SupervisorFactory;
-use Laravel\Horizon\Tests\IntegrationTest;
 use Laravel\Horizon\Tests\Feature\Fixtures\FakeSupervisorFactory;
+use Laravel\Horizon\Tests\IntegrationTest;
 
 class SupervisorCommandTest extends IntegrationTest
 {
@@ -23,5 +23,24 @@ class SupervisorCommandTest extends IntegrationTest
         $this->artisan('horizon:supervisor', ['name' => 'foo', 'connection' => 'redis', '--paused' => true]);
 
         $this->assertFalse($factory->supervisor->working);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_supervisor_command_can_set_process_niceness()
+    {
+        $this->app->instance(SupervisorFactory::class, $factory = new FakeSupervisorFactory);
+        $this->artisan('horizon:supervisor', ['name' => 'foo', 'connection' => 'redis', '--nice' => 10]);
+
+        $this->assertEquals(10, $this->myNiceness());
+    }
+
+    private function myNiceness()
+    {
+        $pid = getmypid();
+
+        return (int) trim(`ps -p $pid -o nice=`);
     }
 }

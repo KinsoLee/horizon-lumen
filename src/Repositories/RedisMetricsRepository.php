@@ -3,11 +3,11 @@
 namespace Laravel\Horizon\Repositories;
 
 use Cake\Chronos\Chronos;
+use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Lock;
 use Laravel\Horizon\LuaScripts;
 use Laravel\Horizon\WaitTimeCalculator;
-use Laravel\Horizon\Contracts\MetricsRepository;
-use Illuminate\Contracts\Redis\Factory as RedisFactory;
 
 class RedisMetricsRepository implements MetricsRepository
 {
@@ -231,7 +231,7 @@ class RedisMetricsRepository implements MetricsRepository
      */
     protected function snapshotsFor($key)
     {
-        return collect($this->connection()->zrange('snapshot:'.$key, 0, - 1))
+        return collect($this->connection()->zrange('snapshot:'.$key, 0, -1))
             ->map(function ($snapshot) {
                 return (object) json_decode($snapshot, true);
             })->values()->all();
@@ -334,9 +334,9 @@ class RedisMetricsRepository implements MetricsRepository
         $lastSnapshotAt = $this->connection()->get('last_snapshot_at')
                     ?: $this->storeSnapshotTimestamp();
 
-        return round(max(
+        return max(
             (Chronos::now()->getTimestamp() - $lastSnapshotAt) / 60, 1
-        ));
+        );
     }
 
     /**

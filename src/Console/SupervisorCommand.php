@@ -23,6 +23,7 @@ class SupervisorCommand extends Command
                             {--max-processes=1 : The maximum number of total workers to start}
                             {--min-processes=1 : The minimum number of workers to assign per queue}
                             {--memory=128 : The memory limit in megabytes}
+                            {--nice=0 : The process priority}
                             {--paused : Start the supervisor in a paused state}
                             {--queue= : The names of the queues to work}
                             {--sleep=3 : Number of seconds to sleep when no job is available}
@@ -46,11 +47,12 @@ class SupervisorCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @param  \Laravel\Horizon\SupervisorFactory  $factory
+     * @return int
      */
-    public function handle()
+    public function handle(SupervisorFactory $factory)
     {
-        $supervisor = app(SupervisorFactory::class)->make(
+        $supervisor = $factory->make(
             $this->supervisorOptions()
         );
 
@@ -73,6 +75,10 @@ class SupervisorCommand extends Command
      */
     protected function start($supervisor)
     {
+        if ($supervisor->options->nice) {
+            proc_nice($supervisor->options->nice);
+        }
+
         $supervisor->handleOutputUsing(function ($type, $line) {
             $this->output->write($line);
         });
@@ -105,7 +111,8 @@ class SupervisorCommand extends Command
             $this->option('timeout'),
             $this->option('sleep'),
             $this->option('tries'),
-            $this->option('force')
+            $this->option('force'),
+            $this->option('nice')
         );
     }
 

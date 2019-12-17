@@ -2,22 +2,22 @@
 
 namespace Laravel\Horizon\Tests\Feature;
 
-use Laravel\Horizon\Jobs\MonitorTag;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
+use Laravel\Horizon\Jobs\MonitorTag;
 use Laravel\Horizon\Jobs\RetryFailedJob;
 use Laravel\Horizon\Tests\IntegrationTest;
 
 class RetryJobTest extends IntegrationTest
 {
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
         unset($_SERVER['horizon.fail']);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
 
