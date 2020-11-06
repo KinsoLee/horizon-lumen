@@ -39,7 +39,7 @@ if (! function_exists('csrf_token')) {
      *
      * @return string
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     function csrf_token()
     {
@@ -57,8 +57,9 @@ if (! function_exists('report')) {
     /**
      * Report an exception.
      *
-     * @param  \Exception  $exception
+     * @param Exception $exception
      * @return void
+     * @throws Exception
      */
     function report($exception)
     {
@@ -78,9 +79,9 @@ if (! function_exists('mix')) {
      *
      * @param  string  $path
      * @param  string  $manifestDirectory
-     * @return \Illuminate\Support\HtmlString
+     * @return HtmlString
      *
-     * @throws \Exception
+     * @throws Exception
      */
     function mix($path, $manifestDirectory = '')
     {
