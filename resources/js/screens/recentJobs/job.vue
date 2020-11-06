@@ -34,6 +34,15 @@
                     <div class="col">{{ readableTimestamp(job.payload.pushedAt) }}</div>
                 </div>
 
+                <div class="row mb-2" v-if="prettyPrintJob(job.payload.data).batchId">
+                    <div class="col-md-2"><strong>Batch</strong></div>
+                    <div class="col">
+                        <router-link :to="{ name: 'batches-preview', params: { batchId: prettyPrintJob(job.payload.data).batchId }}">
+                            {{ prettyPrintJob(job.payload.data).batchId }}
+                        </router-link>
+                    </div>
+                </div>
+
                 <div class="row mb-2" v-if="delayed">
                     <div class="col-md-2"><strong>Delayed Until</strong></div>
                     <div class="col">{{delayed}}</div>
@@ -103,10 +112,20 @@
             },
 
             delayed() {
-                let unserialized = phpunserialize(this.job.payload.data.command);
+                let unserialized;
 
-                if (unserialized && unserialized.delay) {
+                try {
+                    unserialized = phpunserialize(this.job.payload.data.command);
+                }catch(err){
+                    //
+                }
+
+                if (unserialized && unserialized.delay && unserialized.delay.date) {
                     return moment.tz(unserialized.delay.date, unserialized.delay.timezone)
+                        .local()
+                        .format('YYYY-MM-DD HH:mm:ss');
+                } else if (unserialized && unserialized.delay) {
+                    return this.formatDate(this.job.payload.pushedAt).add(unserialized.delay, 'seconds')
                         .local()
                         .format('YYYY-MM-DD HH:mm:ss');
                 }
@@ -132,7 +151,7 @@
             loadJob(id) {
                 this.ready = false;
 
-                this.$http.get(Horizon.basePath + '/api/jobs/recent/' + id)
+                this.$http.get(Horizon.basePath + '/api/jobs/' + id)
                     .then(response => {
                         this.job = response.data;
 
@@ -144,8 +163,12 @@
              * Pretty print serialized job.
              */
             prettyPrintJob(data) {
-                return data.command && !data.command.includes('CallQueuedClosure')
-                    ? phpunserialize(data.command) : data;
+                try {
+                    return data.command && !data.command.includes('CallQueuedClosure')
+                        ? phpunserialize(data.command) : data;
+                } catch (err) {
+                    return data;
+                }
             }
         }
     }

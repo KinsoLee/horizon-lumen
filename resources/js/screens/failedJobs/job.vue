@@ -108,8 +108,12 @@
              * @returns {string}
              */
             prettyPrintJob(data) {
-                return data.command && !data.command.includes('CallQueuedClosure')
-                    ? phpunserialize(data.command) : data;
+                try {
+                    return data.command && !data.command.includes('CallQueuedClosure')
+                        ? phpunserialize(data.command) : data;
+                } catch (err) {
+                    return data;
+                }
             }
         }
     }
@@ -147,8 +151,32 @@
                     <div class="col">{{job.queue}}</div>
                 </div>
                 <div class="row mb-2">
+                    <div class="col-md-2"><strong>Attempts</strong></div>
+                    <div class="col">{{job.payload.attempts}}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-2"><strong>Retries</strong></div>
+                    <div class="col">{{job.retried_by.length}}</div>
+                </div>
+                <div class="row mb-2" v-if="job.payload.retry_of">
+                    <div class="col-md-2"><strong>Retry of ID</strong></div>
+                    <div class="col">
+                         <a :href="Horizon.basePath + '/failed/' + job.payload.retry_of">
+                            {{ job.payload.retry_of }}
+                        </a>
+                    </div>
+                </div>
+                <div class="row mb-2">
                     <div class="col-md-2"><strong>Tags</strong></div>
                     <div class="col">{{ job.payload.tags && job.payload.tags.length ? job.payload.tags.join(', ') : '' }}</div>
+                </div>
+                <div class="row mb-2" v-if="prettyPrintJob(job.payload.data).batchId">
+                    <div class="col-md-2"><strong>Batch</strong></div>
+                    <div class="col">
+                        <router-link :to="{ name: 'batches-preview', params: { batchId: prettyPrintJob(job.payload.data).batchId }}">
+                            {{ prettyPrintJob(job.payload.data).batchId }}
+                        </router-link>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-2"><strong>Failed At</strong></div>
@@ -207,7 +235,7 @@
                             <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm1.41-1.41A8 8 0 1 0 15.66 4.34 8 8 0 0 0 4.34 15.66zm9.9-8.49L11.41 10l2.83 2.83-1.41 1.41L10 11.41l-2.83 2.83-1.41-1.41L8.59 10 5.76 7.17l1.41-1.41L10 8.59l2.83-2.83 1.41 1.41z"/>
                         </svg>
 
-                        {{ retry.status.charAt(0).toUpperCase() + retry.status.slice(1) }}
+                        <span class="ml-2">{{ retry.status.charAt(0).toUpperCase() + retry.status.slice(1) }}</span>
                     </td>
 
                     <td class="table-fit">

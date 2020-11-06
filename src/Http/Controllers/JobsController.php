@@ -2,10 +2,9 @@
 
 namespace Laravel\Horizon\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Laravel\Horizon\Contracts\JobRepository;
 
-class RecentJobsController extends Controller
+class JobsController extends Controller
 {
     /**
      * The job repository implementation.
@@ -25,26 +24,6 @@ class RecentJobsController extends Controller
         parent::__construct();
 
         $this->jobs = $jobs;
-    }
-
-    /**
-     * Get all of the recent jobs.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
-     */
-    public function index(Request $request)
-    {
-        $jobs = $this->jobs->getRecent($request->query('starting_at', -1))->map(function ($job) {
-            $job->payload = json_decode($job->payload);
-
-            return $job;
-        })->values();
-
-        return [
-            'jobs' => $jobs,
-            'total' => $this->jobs->countRecent(),
-        ];
     }
 
     /**

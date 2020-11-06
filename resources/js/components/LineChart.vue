@@ -24,7 +24,12 @@
                         yAxes: [
                             {
                                 ticks: {
-                                    beginAtZero: true
+                                    beginAtZero: true,
+                                     callback: (value, index, values) => {
+                                        return this.data.datasets[0].label === "Seconds"
+                                            ? `${value} secs`
+                                            : value;
+                                    },
                                 },
                                 gridLines: {
                                     display: true
@@ -62,6 +67,6 @@
 
 <template>
     <div style="position: relative;">
-        <canvas ref="canvas" height="70"></canvas>
+        <canvas ref="canvas" height="120"></canvas>
     </div>
 </template>

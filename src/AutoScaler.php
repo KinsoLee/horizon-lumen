@@ -11,22 +11,22 @@ class AutoScaler
     /**
      * The queue factory implementation.
      *
-     * @var QueueFactory
+     * @var \Illuminate\Contracts\Queue\Factory
      */
     public $queue;
 
     /**
      * The metrics repository implementation.
      *
-     * @var MetricsRepository
+     * @var \Laravel\Horizon\Contracts\MetricsRepository
      */
     public $metrics;
 
     /**
      * Create a new auto-scaler instance.
      *
-     * @param QueueFactory $queue
-     * @param MetricsRepository $metrics
+     * @param  \Illuminate\Contracts\Queue\Factory  $queue
+     * @param  \Laravel\Horizon\Contracts\MetricsRepository  $metrics
      * @return void
      */
     public function __construct(QueueFactory $queue, MetricsRepository $metrics)
@@ -38,7 +38,7 @@ class AutoScaler
     /**
      * Balance the workers on the given supervisor.
      *
-     * @param Supervisor $supervisor
+     * @param  \Laravel\Horizon\Supervisor  $supervisor
      * @return void
      */
     public function scale(Supervisor $supervisor)
@@ -57,8 +57,8 @@ class AutoScaler
     /**
      * Get the process pools keyed by their queue name.
      *
-     * @param Supervisor $supervisor
-     * @return Collection
+     * @param  \Laravel\Horizon\Supervisor  $supervisor
+     * @return \Illuminate\Support\Collection
      */
     protected function poolsByQueue(Supervisor $supervisor)
     {
@@ -70,9 +70,9 @@ class AutoScaler
     /**
      * Get the times in milliseconds needed to clear the queues.
      *
-     * @param Supervisor $supervisor
-     * @param Collection $pools
-     * @return Collection
+     * @param  \Laravel\Horizon\Supervisor  $supervisor
+     * @param  \Illuminate\Support\Collection  $pools
+     * @return \Illuminate\Support\Collection
      */
     protected function timeToClearPerQueue(Supervisor $supervisor, Collection $pools)
     {
@@ -89,9 +89,9 @@ class AutoScaler
     /**
      * Get the number of workers needed per queue for proper balance.
      *
-     * @param Supervisor $supervisor
-     * @param Collection $queues
-     * @return Collection
+     * @param  \Laravel\Horizon\Supervisor  $supervisor
+     * @param  \Illuminate\Support\Collection  $queues
+     * @return \Illuminate\Support\Collection
      */
     protected function numberOfWorkersPerQueue(Supervisor $supervisor, Collection $queues)
     {
@@ -117,8 +117,8 @@ class AutoScaler
     /**
      * Scale the given pool to the recommended number of workers.
      *
-     * @param Supervisor $supervisor
-     * @param ProcessPool $pool
+     * @param  \Laravel\Horizon\Supervisor  $supervisor
+     * @param  \Laravel\Horizon\ProcessPool  $pool
      * @param  float  $workers
      * @return void
      */
@@ -126,25 +126,36 @@ class AutoScaler
     {
         $supervisor->pruneTerminatingProcesses();
 
-        $poolProcesses = $pool->totalProcessCount();
+        $totalProcessCount = $pool->totalProcessCount();
 
-        if (ceil($workers) > $poolProcesses &&
-            $this->wouldNotExceedMaxProcesses($supervisor)) {
-            $pool->scale($poolProcesses + 1);
-        } elseif (ceil($workers) < $poolProcesses &&
-                  $poolProcesses > $supervisor->options->minProcesses) {
-            $pool->scale($poolProcesses - 1);
+        $desiredProcessCount = ceil($workers);
+
+        if ($desiredProcessCount > $totalProcessCount) {
+            $maxUpShift = min(
+                $supervisor->options->maxProcesses - $supervisor->totalProcessCount(),
+                $supervisor->options->balanceMaxShift
+            );
+
+            $pool->scale(
+                min(
+                    $totalProcessCount + $maxUpShift,
+                    $supervisor->options->maxProcesses,
+                    $desiredProcessCount
+                )
+            );
+        } elseif ($desiredProcessCount < $totalProcessCount) {
+            $maxDownShift = min(
+                $supervisor->totalProcessCount() - $supervisor->options->minProcesses,
+                $supervisor->options->balanceMaxShift
+            );
+
+            $pool->scale(
+                max(
+                    $totalProcessCount - $maxDownShift,
+                    $supervisor->options->minProcesses,
+                    $desiredProcessCount
+                )
+            );
         }
-    }
-
-    /**
-     * Determine if adding another process would exceed max process limit.
-     *
-     * @param Supervisor $supervisor
-     * @return bool
-     */
-    protected function wouldNotExceedMaxProcesses(Supervisor $supervisor)
-    {
-        return ($supervisor->totalProcessCount() + 1) <= $supervisor->options->maxProcesses;
     }
 }

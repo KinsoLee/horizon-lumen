@@ -58,14 +58,20 @@ export default [
     },
 
     {
-        path: '/recent-jobs',
-        name: 'recent-jobs',
+        path: '/jobs/:type',
+        name: 'jobs',
         component: require('./screens/recentJobs/index').default,
     },
 
     {
-        path: '/recent-jobs/:jobId',
-        name: 'recent-jobs-preview',
+        path: '/jobs/pending/:jobId',
+        name: 'pending-jobs-preview',
+        component: require('./screens/recentJobs/job').default,
+    },
+
+    {
+        path: '/jobs/completed/:jobId',
+        name: 'completed-jobs-preview',
         component: require('./screens/recentJobs/job').default,
     },
 
@@ -79,5 +85,17 @@ export default [
         path: '/failed/:jobId',
         name: 'failed-jobs-preview',
         component: require('./screens/failedJobs/job').default,
+    },
+
+    {
+        path: '/batches',
+        name: 'batches',
+        component: require('./screens/batches/index').default,
+    },
+
+    {
+        path: '/batches/:batchId',
+        name: 'batches-preview',
+        component: require('./screens/batches/preview').default,
     },
 ];

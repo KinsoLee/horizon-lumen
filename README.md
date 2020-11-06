@@ -1,33 +1,18 @@
+<p align="center"><img src="https://laravel.com/assets/img/components/logo-horizon.svg"></p>
+
+<p align="center">
+<a href="https://github.com/laravel/horizon/actions"><img src="https://github.com/laravel/horizon/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/horizon"><img src="https://img.shields.io/packagist/dt/laravel/horizon" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/horizon"><img src="https://img.shields.io/packagist/v/laravel/horizon" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/horizon"><img src="https://img.shields.io/packagist/l/laravel/horizon" alt="License"></a>
+</p>
+
 ## Introduction
 
-Horizon Horizon is based on the official [Laravel Horizon](https://github.com/laravel/horizon) package.The web UI is also included.
+Horizon provides a beautiful dashboard and code-driven configuration for your Laravel powered Redis queues. Horizon allows you to easily monitor key metrics of your queue system such as job throughput, runtime, and job failures.
 
-If you prefer a pure restful api and want to customize the UI, you can refer to [Lumen-horizon](https://github.com/servocoder/lumen-horizon) by servocoder.
+All of your worker configuration is stored in a single, simple configuration file, allowing your configuration to stay in source control where your entire team can collaborate.
 
-## Installation
-
-1. Run composer to add the dependency.
-
-```
-composer require kinsolee/horizon-lumen
-```
-
-2. Install the horizon or publish the assets only
-```php
-php artisan horizon:install // This will copy the config file to the config directory
-php artisan horizon:assets
-```
-## Problems
-* If you get the follow errors when you run `horizon:assets`/`horizon:install`:
-```
-Type error: Argument 1 passed to Laravel\Horizon\Repositories\RedisMasterSupervisorRepository::__construct() must implement interface Illuminate\Contr
-  acts\Redis\Factory, instance of Redis given
-```
-Make sure you register `Illuminate\Redis\RedisServiceProvider::class` in your `boorstrap/app.php` file.
-
-* If you deploy horizon-lumen on sub-directory, please specific `base_path` in config/horizon.php
-
-* If you occur error: `ERROR: RuntimeException: A facade root has not been set.`, please uncomment `$app->withFacades();` in `bootstrap/app.php` 
 ## Official Documentation
 
 Documentation for Horizon can be found on the [Laravel website](https://laravel.com/docs/horizon).
