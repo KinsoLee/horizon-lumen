@@ -1,7 +1,8 @@
 {
-    "name": "kinsolee/horizon-lumen",
+    "name": "chantouch/horizon-lumen",
     "description": "Dashboard and code-driven configuration for Laravel queues.",
-    "keywords": ["lumen",
+    "keywords": [
+        "lumen",
         "queue",
         "horizon",
         "user interface"
@@ -13,8 +14,8 @@
             "email": "taylor@laravel.com"
         },
         {
-            "name": "Kinso Lee",
-            "email": "lijingzhao.love@gmail.com"
+            "name": "Chantouch Sek",
+            "email": "chantouchsek.cs83@gmail.com"
         }
     ],
     "require": {
@@ -23,14 +24,14 @@
         "ext-pcntl": "*",
         "ext-posix": "*",
         "cakephp/chronos": "^1.0",
-        "illuminate/contracts": "~5.7.0|~5.8.0|^6.0",
-        "illuminate/queue": "~5.7.0|~5.8.0|^6.0",
-        "illuminate/support": "~5.7.0|~5.8.0|^6.0",
+        "illuminate/contracts": "~5.7.0|~5.8.0|^6.0|^7.0|8.0",
+        "illuminate/queue": "~5.7.0|~5.8.0|^6.0|^7.0|^8.0",
+        "illuminate/support": "~5.7.0|~5.8.0|^6.0|^7.0|^8.0",
         "predis/predis": "^1.1",
-        "ramsey/uuid": "^3.5",
-        "symfony/process": "^4.2",
-        "symfony/debug": "^4.2",
-        "laravelista/lumen-vendor-publish": "~5.7.0|~5.8.0|^6.0"
+        "ramsey/uuid": "^3.5|^4.0",
+        "symfony/process": "^4.2|^5.0",
+        "symfony/debug": "^4.2|^4.4",
+        "laravelista/lumen-vendor-publish": "~5.7.0|~5.8.0|^6.0|^7.0|^8.0"
     },
     "require-dev": {
         "mockery/mockery": "^1.0",

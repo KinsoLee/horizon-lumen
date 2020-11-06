@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: kinso
- * Date: 2018/4/10
- * Time: 下午9:24
- */
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\HtmlString;
